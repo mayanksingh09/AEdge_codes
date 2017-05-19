@@ -70,5 +70,40 @@ table(qualitytrain$PoorCare, predictTrain > 0.2)
 
 #Receiver Operator Characteristic (ROC) Curve
 
-install.packages("gtools")
+library(ROCR)
+
+ROCRpred <- prediction(predictTrain, qualitytrain$PoorCare) #prediction fn from ROCR package
+
+#performance fn defines what to plot on X & Y axes of ROC curve
+
+ROCRperf <- performance(ROCRpred, "tpr", "fpr")
+
+plot(ROCRperf, colorize = T, print.cutoffs.at=seq(0,1,0.1), text.adj = c(-0.2, 1.7)) #ROC curve color coded by threshold values
+
+
+#Using test data
+predictTest <- predict(QualityLog, type = "response", newdata = qualitytest)
+
+
+#Threshold 0.3
+table(qualitytest$PoorCare, predictTest > 0.3)
+
+(19 + 6)/32 #Overall accuracy of model
+
+5/(19+5) #FPR
+
+2/8 #FNR
+
+6/8 #Sensitivity/TPR
+
+19/24 #Specificity/TNR
+
+
+###Question
+
+ROCRpredTest = prediction(predictTest, qualitytest$PoorCare)
+
+auc = as.numeric(performance(ROCRpredTest, "auc")@y.values)
+
+###
 
