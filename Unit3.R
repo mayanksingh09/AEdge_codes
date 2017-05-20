@@ -107,3 +107,127 @@ auc = as.numeric(performance(ROCRpredTest, "auc")@y.values)
 
 ###
 
+
+#FRAMINGHAM HEART STUDY
+
+framingham <- read.csv("./data/framingham.csv")
+str(framingham)
+
+library(caTools)
+
+set.seed(1000)
+
+split <- sample.split(framingham$TenYearCHD, SplitRatio = 0.65)
+
+train <- subset(framingham, split == TRUE)
+test <- subset(framingham, split == F)
+
+framinghamlog <- glm(TenYearCHD ~ ., data = train, family = binomial)
+
+summary(framinghamlog)
+
+predictTest <- predict(framinghamlog, type = "response", newdata = test)
+
+#Confusion matrix
+
+#Threshold 0.5
+table(test$TenYearCHD, predictTest > 0.5)
+
+(1069 + 11)/(1069 + 187 + 11 + 6) #Overall accuracy
+
+(1069 + 6)/(1069 + 6 + 187 + 11) #Baseline model accuracy
+
+#Out of sample AUC
+
+library(ROCR)
+
+ROCRpred <- prediction(predictTest, test$TenYearCHD)
+as.numeric(performance(ROCRpred, "auc")@y.values) #AUC value
+
+11/(187+11) #Sensitivity
+
+1069/(1069+6) #Specificity
+
+
+#ELECTION PREDICTION
+
+polling <- read.csv("./data/PollingData.csv")
+str(polling)
+
+table(polling$Year) #check for missing data
+
+summary(polling) #Missing values
+
+#Multiple Imputation
+
+library(mice)
+
+#Limit the dataframe to only 4 polling related variables before performing Multiple Imputation
+
+simple <- polling[c("Rasmussen", "SurveyUSA", "PropR", "DiffCount")]
+
+summary(simple)
+
+set.seed(144)
+imputed <- complete(mice(simple))
+
+polling$Rasmussen <- imputed$Rasmussen
+polling$SurveyUSA <- imputed$SurveyUSA
+
+summary(imputed)
+
+polling <- read.csv("./data/PollingData_Imputed.csv") #the imputed values weren't same so used this instead
+
+summary(polling)
+
+#Splitting into training and testing set
+Train <- subset(polling, Year == 2004 | Year == 2008)
+Test <- subset(polling, Year == 2012)
+
+table(Train$Republican)
+
+#computing smart baseline model using sign
+
+table(sign(Train$Rasmussen))
+
+table(Train$Republican, sign(Train$Rasmussen)) #Comparing baseline model with actual results
+
+
+#Addressing Multicollinearity
+
+cor(polling[c("Rasmussen", "SurveyUSA", "DiffCount", "PropR", "Republican")])
+
+#Build model with just one variable
+#Add variable most highly correlated with the outcome, republican
+
+mod1 <- glm(Republican ~ PropR, data = Train, family = binomial)
+summary(mod1)
+
+pred1 <- predict(mod1, type = "response")
+
+#Confusion matrix
+table(Train$Republican, pred1 >= 0.5)
+
+
+#Add the two least correlated variables together
+mod2 <- glm(Republican ~ SurveyUSA + DiffCount, data = Train, family = binomial)
+summary(mod2)
+
+pred2 <- predict(mod2, type = "response")
+
+table(Train$Republican, pred2 >= 0.5)
+
+
+#Evaluate model on test set
+
+#use the smart baseline model first
+
+table(Test$Republican, sign(Test$Rasmussen))
+
+
+#use mod2
+TestPrediction <- predict(mod2, type = "response", newdata = Test)
+
+table(Test$Republican, TestPrediction >= 0.5)
+
+subset(Test, TestPrediction >= 0.5 & Republican == 0)
