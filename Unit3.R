@@ -231,3 +231,113 @@ TestPrediction <- predict(mod2, type = "response", newdata = Test)
 table(Test$Republican, TestPrediction >= 0.5)
 
 subset(Test, TestPrediction >= 0.5 & Republican == 0)
+
+
+
+#Assignment 1 - TOP 10
+
+songs <- read.csv("./data/songs.csv")
+
+nrow(subset(songs, year == 2010)) #Ans 1.1
+
+nrow(subset(songs, artistname == "Michael Jackson")) #Ans 1.2
+
+
+MJ <- subset(songs, artistname == "Michael Jackson")
+
+subset(MJ, Top10 == 1)$songtitle #Ans 1.3
+
+unique(songs$timesignature) #Ans 1.4
+
+table(songs$timesignature)
+
+songs$songtitle[which.max(songs$tempo)] #Ans 1.5
+
+
+SongsTrain <- subset(songs, year <= 2009)
+SongsTest <- subset(songs, year == 2010)
+
+nrow(SongsTrain)
+
+nonvars <- c("year", "songtitle", "artistname", "songID", "artistID")
+
+##removing some columns from data set
+SongsTrain = SongsTrain[, !(names(SongsTrain) %in% nonvars)]
+
+SongsTest = SongsTest[, !(names(SongsTest) %in% nonvars)]
+
+SongsLog1 = glm(Top10 ~ ., data=SongsTrain, family=binomial)
+
+summary(SongsLog1) #Ans 2.2
+
+cor(SongsTrain$loudness, SongsTrain$energy) #Ans 3.1
+
+SongsLog2 = glm(Top10 ~ . - loudness, data=SongsTrain, family=binomial) #create model 2 with all variables except loudness
+summary(SongsLog2) #Ans 3.2
+
+
+SongsLog3 = glm(Top10 ~ . - energy, data=SongsTrain, family=binomial)
+summary(SongsLog3)
+
+predictTest <- predict(SongsLog3, type = "response", newdata = SongsTest)
+
+table(SongsTest$Top10, predictTest > 0.45)
+(309 + 19)/(309+5+40+19) #Ans 4.1
+
+(309 + 5)/(309+5+40+19)#Ans 4.2
+
+19/(19+40) #Ans 4.4 Sensitivity
+
+309/(309+5)
+
+
+##Assignment 2 - Parole Violations
+
+parole <- read.csv("./data/parole.csv")
+
+nrow(parole) #Ans 1.1
+
+nrow(subset(parole, violator==1)) #Ans 1.2
+
+str(parole)
+
+parole$state <- as.factor(parole$state)
+parole$crime <- as.factor(parole$crime)
+
+summary(parole)
+
+set.seed(144)
+library(caTools)
+split = sample.split(parole$violator, SplitRatio = 0.7)
+train = subset(parole, split == TRUE)
+test = subset(parole, split == FALSE)
+
+
+parolemod1 <- glm(violator~., data = parole, family = binomial)
+
+summary(parolemod1)
+exp(1.61) #Ans 4.2
+
+e <- exp(-4.05 + 0.27 + 0.75 + (0.00655*50) - (0.076*3) + (0.053*12) + (0.33*1))
+
+e/(e+1)
+
+predictTest <- predict(parolemod1, newdata = test, type = "response")
+
+max(predictTest)
+
+table(test$violator, predictTest > 0.5)
+12/(12+11)
+
+169/(169+10)
+
+(169+12)/(169+10+11+12)
+
+(169+10)/(169+10+11+12)
+
+library(ROCR)
+
+ROCRpredTest = prediction(predictTest, test$violator)
+
+auc = as.numeric(performance(ROCRpredTest, "auc")@y.values) #Ans 5.6
+auc
