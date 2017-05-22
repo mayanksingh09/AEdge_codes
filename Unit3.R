@@ -340,4 +340,81 @@ library(ROCR)
 ROCRpredTest = prediction(predictTest, test$violator)
 
 auc = as.numeric(performance(ROCRpredTest, "auc")@y.values) #Ans 5.6
-auc
+
+
+#Assignment 3 Loan Repayment
+
+loans <- read.csv("./data/loans.csv")
+
+prop.table(table(loans$not.fully.paid)) #Ans 1.1
+
+summary(loans) #Ans 1.2
+
+loans_imputed <- read.csv("./data/loans_imputed.csv")
+
+##Missing value imputation
+library(mice)
+set.seed(144)
+vars.for.imputation = setdiff(names(loans), "not.fully.paid")
+imputed = complete(mice(loans[vars.for.imputation]))
+loans[vars.for.imputation] = imputed
+
+##Using the imputed dataset instead
+loans <- loans_imputed
+
+library(caTools)
+set.seed(144)
+split <- sample.split(loans$not.fully.paid, SplitRatio = 0.7)
+
+train <- subset(loans, split == TRUE)
+test <- subset(loans, split == FALSE)
+
+
+loansmod1 <- glm(not.fully.paid ~., data = train, family = binomial)
+summary(loansmod1) #Ans 2.1
+
+test$predicted.risk <- predict(loansmod1, type = "response", newdata = test)
+
+table(test$not.fully.paid, test$predicted.risk > 0.5)
+
+(2400+3)/(2400+13+457+3) #Ans 2.3
+
+prop.table(table(test$not.fully.paid))
+
+
+library(ROCR)
+ROCRpredTest <- prediction(test$predicted.risk, test$not.fully.paid)
+
+auc = as.numeric(performance(ROCRpredTest, "auc")@y.values) #Ans 2.4
+
+
+loansmod2 <- glm(not.fully.paid ~ int.rate, family = binomial, data = train)
+summary(loansmod2)
+
+predicted.risk2 <- predict(loansmod2, type = "respons", newdata = test)
+
+max(predicted.risk2) #Ans 3.2
+
+ROCRpredTest2 <- prediction(predicted.risk2, test$not.fully.paid)
+auc <- as.numeric(performance(ROCRpredTest2, "auc")@y.values)
+
+
+test$profit = exp(test$int.rate*3) - 1
+
+test$profit[test$not.fully.paid == 1] = -1
+max(test$profit) #Ans 5.1
+
+highInterest <- subset(test[test$int.rate >= 0.15, ])
+
+mean(highInterest$profit) #Ans 6.1
+
+prop.table(table(highInterest$not.fully.paid))
+
+cutoff = sort(highInterest$predicted.risk, decreasing=FALSE)[100]
+
+selectedLoan <- subset(highInterest, predicted.risk <= cutoff)
+nrow(selectedLoan)
+
+sum(selectedLoan$profit) #Ans 6.2
+
+table(selectedLoan$not.fully.paid)
