@@ -418,3 +418,103 @@ nrow(selectedLoan)
 sum(selectedLoan$profit) #Ans 6.2
 
 table(selectedLoan$not.fully.paid)
+
+
+#Assignment 4 Baseball WSC 
+
+baseball <- read.csv("./data/baseball.csv")
+
+nrow(baseball) #Ans 1.1
+
+nrow(table(baseball$Year)) #Ans 1.2
+
+baseball <- subset(baseball, Playoffs == 1)
+nrow(playoff)
+
+table(baseball$Year) #Ans 1.4
+
+PlayoffTable <- table(baseball$Year)
+names(PlayoffTable) #Ans 2.1
+
+PlayoffTable[c("1990", "2001")] #Ans 2.2
+
+baseball$NumCompetitors = PlayoffTable[as.character(baseball$Year)]
+
+nrow(subset(baseball, NumCompetitors == 8))
+
+baseball$WorldSeries = as.numeric(baseball$RankPlayoffs == 1)
+nrow(subset(baseball, WorldSeries == 0)) #Ans 3.1
+
+WSmod1 <- glm(WorldSeries ~RS, data = baseball, family = binomial)
+
+summary(WSmod1)
+
+names(baseball)
+
+WSmod2 <- glm(WorldSeries ~ RA, data = baseball, family = binomial)
+summary(WSmod2)
+
+WSmod3 <- glm(WorldSeries ~ W, data = baseball, family = binomial)
+summary(WSmod3)
+
+WSmod4 <- glm(WorldSeries ~ OBP, data = baseball, family = binomial)
+summary(WSmod4)
+
+WSmod5 <- glm(WorldSeries ~ SLG, data = baseball, family = binomial)
+summary(WSmod5)
+
+WSmod6 <- glm(WorldSeries ~ BA, data = baseball, family = binomial)
+summary(WSmod6)
+
+WSmod7 <- glm(WorldSeries ~ RankSeason, data = baseball, family = binomial)
+summary(WSmod7)
+
+WSmod8 <- glm(WorldSeries ~ OOBP, data = baseball, family = binomial)
+summary(WSmod8)
+
+WSmod9 <- glm(WorldSeries ~ OSLG, data = baseball, family = binomial)
+summary(WSmod9)
+
+WSmod10 <- glm(WorldSeries ~ NumCompetitors, data = baseball, family = binomial)
+summary(WSmod10)
+
+WSmod11 <- glm(WorldSeries ~ League, data = baseball, family = binomial)
+summary(WSmod11)
+
+WSmod12 <- glm(WorldSeries ~ Year, data = baseball, family = binomial)
+summary(WSmod12)
+
+WSmod <- glm(WorldSeries ~ Year + RA + RankSeason + NumCompetitors, data = baseball, family = binomial)
+summary(WSmod)
+
+cor(baseball[c("Year", "RA", "RankSeason", "NumCompetitors")]) #Ans 4.2
+
+WSmodbi1 <- glm(WorldSeries ~ Year, data = baseball, family = binomial)
+summary(WSmodbi1)
+
+WSmodbi2 <- glm(WorldSeries ~ RA, data = baseball, family = binomial)
+summary(WSmodbi2)
+
+WSmodbi3 <- glm(WorldSeries ~ RankSeason, data = baseball, family = binomial)
+summary(WSmodbi3)
+
+WSmodbi4 <- glm(WorldSeries ~ NumCompetitors, data = baseball, family = binomial)
+summary(WSmodbi4)
+
+WSmodtwo1 <- glm(WorldSeries ~ Year + RA, data = baseball, family = binomial)
+summary(WSmodtwo1)
+
+WSmodtwo2 <- glm(WorldSeries ~ Year + RankSeason, data = baseball, family = binomial)
+summary(WSmodtwo2)
+
+WSmodtwo3 <- glm(WorldSeries ~ Year + NumCompetitors, data = baseball, family = binomial)
+summary(WSmodtwo3)
+
+WSmodtwo4 <- glm(WorldSeries ~ RA + NumCompetitors, data = baseball, family = binomial)
+summary(WSmodtwo4)
+
+WSmodtwo5 <- glm(WorldSeries ~ RA + RankSeason, data = baseball, family = binomial)
+summary(WSmodtwo5)
+
+WSmodtwo6 <- glm(WorldSeries ~ NumCompetitors + RankSeason, data = baseball, family = binomial)
+summary(WSmodtwo6)
