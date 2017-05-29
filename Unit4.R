@@ -96,3 +96,9 @@ table(Test$Reverse, PredictCV)
 (59+64)/(59+18+29+64) #Overall Accuracy
 
 prp(SteventsTreeCV) #plot of the tree
+
+
+#D2HAWKEYE STORY
+
+claimsdata <- read.csv("./data/ClaimsData.csv")
+str(claimsdata)
