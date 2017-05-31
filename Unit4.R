@@ -280,3 +280,316 @@ best.tree.pred <- predict(best.tree, newdata = test)
 
 best.tree.sse <- sum((best.tree.pred - test$MEDV)^2) #SSE has reduced as compared to the earlier tree
 
+
+
+
+# ASSIGNMENT 1 - VOTING DATA
+
+## Loading data
+gerber <- read.csv('./data/gerber.csv')
+
+table(gerber$voting)/nrow(gerber) #Ans 1.1
+
+tapply(gerber$voting, gerber$civicduty, mean) #Ans 1.2
+tapply(gerber$voting, gerber$hawthorne, mean)
+tapply(gerber$voting, gerber$self, mean)
+tapply(gerber$voting, gerber$neighbors, mean)
+tapply(gerber$voting, gerber$control, mean)
+
+
+votinglog <- glm(voting ~ civicduty + hawthorne + self + neighbors, data = gerber, family = binomial)
+
+summary(votinglog) #Ans 1.3
+
+votpred <- predict(votinglog, type = "response")
+
+table(gerber$voting, votpred > 0.3)
+
+(134513 + 51966)/(134513 + 100875 + 56730 + 51966) #Ans 1.4
+
+table(gerber$voting, votpred > 0.5) 
+
+235388/(235388+ 108696) #Ans 1.5
+
+table(gerber$voting)
+
+library(ROCR)
+ROCRpred <- prediction(votpred, gerber$voting)
+
+auc <- as.numeric(performance(ROCRpred, "auc")@y.values) #auc
+
+library(rpart)
+library(rpart.plot)
+votingtree <- rpart(voting ~ civicduty + hawthorne + self + neighbors, data = gerber)
+
+prp(votingtree) #Tree - None of the variables make a big enough impact for it to be split
+
+votingtree2 <- rpart(voting ~ civicduty + hawthorne + self + neighbors, data = gerber, cp = 0.0)
+
+prp(votingtree2)
+
+votingtree3 <- rpart(voting ~ civicduty + hawthorne + self + neighbors + sex, data = gerber, cp = 0.0)
+
+prp(votingtree3) #Ans 2.4
+
+
+## Ans 3
+votingtree4 <- rpart(voting ~ control, data = gerber, cp = 0.0)
+prp(votingtree4, digits = 6)
+
+votingtree5 <- rpart(voting ~ control + sex, data = gerber, cp = 0.0)
+prp(votingtree5, digits = 6)
+
+0.334176 - 0.290456
+
+0.345818 - 0.302795 #Almost same
+
+
+votinglog2 <- glm(voting ~ sex + control, data = gerber, family = binomial)
+summary(votinglog2) #Women less likely to vote, negative coeff means larger values are predicted 0
+
+Possibilities = data.frame(sex=c(0,0,1,1),control=c(0,1,0,1))
+predict(votinglog2, newdata=Possibilities, type="response")
+
+0.290456 - 0.2908065 #Ans 3.4
+
+#Combination of Sex and Control terms
+
+votinglog3 <- glm(voting ~ sex + control + sex:control, data = gerber, family = binomial)
+summary(votinglog3) #Ans 3.5
+
+predict(votinglog3, newdata=Possibilities, type="response")
+
+(0.2904558 - 0.290456)*100000
+
+
+#ASSIGNMENT 2 - LETTERS
+
+letters <- read.csv("./data/letters_ABPR.csv")
+
+letters$isB = as.factor(letters$letter == "B")
+
+
+set.seed(1000)
+library(caTools)
+library(rpart)
+
+split <- sample.split(letters$isB, SplitRatio = 0.5)
+
+train <- subset(letters, split == T)
+test <- subset(letters, split == F)
+
+
+table(test$isB)/nrow(test) #Ans 1.1
+
+CARTb <- rpart(isB ~. -letter, data = train, method = "class")
+prp(CARTb)
+
+Predlet <- predict(CARTb, newdata = test, type = "class")
+
+table(test$isB, Predlet)
+
+(1118 + 340)/(1118+57+43+340) #Ans 1.2
+
+
+##Random forest model
+
+library(randomForest)
+
+set.seed(1000)
+RandomForestb <- randomForest(isB ~. -letter, data = train)
+PredRFlet <- predict(RandomForestb, newdata = test)
+
+table(test$isB, PredRFlet)
+(1165 + 374)/nrow(test) #Ans 1.3
+
+letters$letter = as.factor( letters$letter )
+
+set.seed(2000)
+split <- sample.split(letters$letter, SplitRatio = 0.5)
+train <- subset(letters, split == T)
+test <- subset(letters, split == F)
+
+table(test$letter)
+
+401/nrow(test) #Ans 2.1
+
+##Second CART Model
+CARTlet <- rpart(letter ~. -isB, data = train, method = "class")
+prp(CARTlet)
+
+Predlet2 <- predict(CARTlet, newdata = test, type = "class")
+table(test$letter, Predlet2)
+
+(348 + 318 + 363 + 340)/nrow(test) #Ans 2.2
+
+
+##Second RF Model
+
+set.seed(1000)
+RandomForestlet <- randomForest(letter ~. -isB, data = train)
+PredRFlet2 <- predict(RandomForestlet, newdata = test)
+
+table(test$letter, PredRFlet2)
+
+(390 + 380 + 393 + 364)/nrow(test) #Ans 2.3
+
+
+#ASSIGNMENT 3 - EARNINGS
+
+census <- read.csv('./data/census.csv')
+
+set.seed(2000)
+split <- sample.split(census$over50k, SplitRatio = 0.6)
+train <- subset(census, split == T)
+test <- subset(census, split == F)
+
+earningslog <- glm(over50k ~. , data = train, family = binomial)
+summary(earningslog)
+
+Predearning <- predict(earningslog, newdata = test, type = "response")
+
+table(test$over50k, Predearning > 0.5)
+(9051+1888)/nrow(test)
+
+table(test$over50k) #Ans 1.2
+9713/nrow(test)
+
+
+##AUC
+ROCRpred <- prediction(Predearning, test$over50k)
+auc <- as.numeric(performance(ROCRpred, "auc")@y.values) #auc
+
+
+##CART Model Earnings
+
+earningsCART <- rpart(over50k ~. , data = train, method = "class")
+prp(earningsCART)
+
+PredearningCART <- predict(earningsCART, newdata = test, type = "class")
+table(test$over50k, PredearningCART)
+
+(9243 + 1596)/nrow(test) #Ans 2.4
+
+PredearningCARTprob <- predict(earningsCART, newdata = test, type = "prob")
+
+ROCRpred <- prediction(PredearningCARTprob[,2], test$over50k)
+perf <- performance(ROCRpred, "tpr", "fpr")
+plot(perf) #Ans 2.5 The probabilities from the CART model take only a handful of values
+auc <- as.numeric(performance(ROCRpred, "auc")@y.values) # Ans 2.6
+
+## Down sampling the training set
+set.seed(1)
+trainSmall = train[sample(nrow(train), 2000), ]
+
+set.seed(1)
+earningRF <- randomForest(over50k ~., data = trainSmall)
+PredearningRF <- predict(earningRF, newdata = test, type = "prob")
+
+table(test$over50k, PredearningRF[,2] > 0.5)
+(9586 + 1086)/nrow(test) #Ans 3.1
+
+## Variable used maximum number of times in the RF model
+vu = varUsed(earningRF, count=TRUE)
+vusorted = sort(vu, decreasing = FALSE, index.return = TRUE)
+dotchart(vusorted$x, names(earningRF$forest$xlevels[vusorted$ix])) #Ans 3.2
+
+varImpPlot(earningRF)
+
+
+## CART behavior
+library(caret)
+library(e1071)
+
+
+### cp value by cross validation
+set.seed(2)
+numFolds <- trainControl(method = "cv", number = 10) #10 folds
+cartGrid = expand.grid( .cp = seq(0.002,0.1,0.002))
+
+train(over50k ~. , data = train, method = "rpart", trControl = numFolds, tuneGrid = cartGrid)
+
+earningsCART2 <- rpart(over50k ~. , data = train, method = "class", cp = 0.002)
+predCART2 <- predict(earningsCART2, newdata = test, type = "class")
+
+table(test$over50k, predCART2)
+(9178 + 1838)/nrow(test) #Ans 4.2
+
+library(rpart.plot)
+prp(earningsCART2) #Ans 4.3 - 18
+
+
+#ASSIGNMENT 4 - STATE DATA
+
+
+data(state)
+statedata <- data.frame(state.x77)
+str(statedata)
+
+
+## First LM
+statelin <- lm(Life.Exp ~. ,data = statedata)
+summary(statelin) #Ans 1.1
+
+SSE <- sum(statelin$residuals^2) #Ans 1.2
+
+
+## Second LM
+statelin2 <- lm(Life.Exp ~ Population + Murder + Frost + HS.Grad, data = statedata)
+summary(statelin2) #Ans 1.3
+
+SSE <- sum(statelin2$residuals^2)
+
+
+## CART Model
+
+stateCART <- rpart(Life.Exp ~. , data = statedata)
+prp(stateCART)
+
+predCART <- predict(stateCART)
+
+SSE <- sum((statedata$Life.Exp - predCART)^2)
+
+
+## CART Model2 
+
+stateCART2 <- rpart(Life.Exp ~. , data = statedata, minbucket = 5)
+prp(stateCART2)
+
+predCART2 <- predict(stateCART2)
+
+SSE <- sum((statedata$Life.Exp - predCART2)^2)
+
+
+## CART Model3
+stateCART3 <- rpart(Life.Exp ~ Area , data = statedata, minbucket = 1)
+prp(stateCART3)
+
+predCART3 <- predict(stateCART3)
+
+SSE <- sum((statedata$Life.Exp - predCART3)^2) #Ans 2.6
+
+
+## Cross Validation
+
+set.seed(111)
+numFolds <- trainControl(method = "cv", number = 10) #10 folds
+cpGrid <- expand.grid(.cp = seq(0.01, 0.5, 0.01))
+
+train(Life.Exp ~. , data = statedata, method = "rpart", trControl = numFolds, tuneGrid = cpGrid) #Ans 3.1
+
+stateCART4 <- rpart(Life.Exp ~., data = statedata, cp = 0.12)
+prp(stateCART4) #Ans 3.2
+predCART4 <- predict(stateCART4)
+SSE <- sum((statedata$Life.Exp - predCART4)^2) #Ans 3.3
+
+#Ans 3.4 - Model with the best cp
+
+set.seed(111)
+train(Life.Exp ~ Area , data = statedata, method = "rpart", trControl = numFolds, tuneGrid = cpGrid)
+
+stateCART5 <- rpart(Life.Exp ~ Area, data = statedata, cp = 0.02)
+prp(stateCART5, digits = 6) #Ans 3.6
+predCART5 <- predict(stateCART5)
+
+SSE <- sum((statedata$Life.Exp - predCART5)^2) #Ans 3.7 Area variable not as predictive as murder rate
