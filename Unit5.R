@@ -331,3 +331,107 @@ table(wikiWords3Test$Vandal, predCART4)
 
 prp(wikiCART4) #Ans 3.2
 
+
+# Assignment 2 - CLINICAL TRIALS
+
+clinic <- read.csv("./data/clinical_trial.csv", stringsAsFactors = F)
+
+max(nchar(clinic$abstract)) #Ans 1.1
+
+nrow(clinic[nchar(clinic$abstract) == 0,]) #Ans 1.2
+
+clinic$title[which.min(nchar(clinic$title))] #Ans 1.3
+
+corpusTitle <- Corpus(VectorSource(clinic$title))
+corpusTitle[[1]]$content
+
+corpusAbstract <- Corpus(VectorSource(clinic$abstract))
+
+corpusTitle <- tm_map(corpusTitle, content_transformer(tolower))
+corpusAbstract <- tm_map(corpusAbstract, content_transformer(tolower))
+
+
+corpusTitle <- tm_map(corpusTitle, removePunctuation)
+corpusAbstract <- tm_map(corpusAbstract, removePunctuation)
+
+
+corpusTitle <- tm_map(corpusTitle, removeWords, stopwords("english"))
+corpusAbstract <- tm_map(corpusAbstract, removeWords, stopwords("english"))
+
+corpusTitle <- tm_map(corpusTitle, stemDocument)
+corpusAbstract <- tm_map(corpusAbstract, stemDocument)
+
+corpusTitle[[1]]$content
+corpusAbstract[[2]]$content
+
+
+dtmTitle <- DocumentTermMatrix(corpusTitle)
+dtmAbstract <- DocumentTermMatrix(corpusAbstract)
+
+dtmTitle <- removeSparseTerms(dtmTitle, 0.95)
+dtmAbstract <- removeSparseTerms(dtmAbstract, 0.95)
+
+dtmTitle <- as.data.frame(as.matrix(dtmTitle))
+dtmAbstract <- as.data.frame(as.matrix(dtmAbstract))
+
+ncol(dtmTitle) #Ans 2.1
+ncol(dtmAbstract)
+
+which.max(colSums(dtmAbstract)) #Ans 2.3
+
+colnames(dtmTitle) = paste0("T", colnames(dtmTitle))
+colnames(dtmAbstract) = paste0("A", colnames(dtmAbstract))
+dtm = cbind(dtmTitle, dtmAbstract)
+
+dtm$trials <- clinic$trial
+
+ncol(dtm) #Ans 3.2
+
+library(caTools)
+
+set.seed(144)
+
+split <- sample.split(dtm$trials, SplitRatio = 0.7)
+
+train <- subset(dtm, split == T)
+test <- subset(dtm, split == F)
+
+table(test$trials)
+
+313/nrow(test) #Ans 3.3
+
+trialCART <- rpart(trials ~. , data = train, method = "class")
+prp(trialCART) #Ans 3.4
+
+max(predict(trialCART, type = "prob")[,2]) #Ans 3.5
+
+trainpred <- predict(trialCART, type = "prob")[,2]
+
+table(train$trials, trainpred > 0.5)
+(631 + 441)/nrow(train) #Ans 3.7
+
+441/(441+131) #Ans 3.7
+
+631/(631+99)
+
+
+
+trialpred <- predict(trialCART, newdata = test, type = "prob")
+
+table(test$trials, trialpred[,2] >= 0.5)
+
+(261 + 162)/nrow(test) #Ans 4.1
+
+library(ROCR)
+
+predROCR <- prediction(pred[,2], test$responsive)
+perfROCR <- performance(predROCR, "tpr", "fpr")
+
+
+trialROCR <- prediction(trialpred[,2], test$trials)
+
+predROCR <- performance(trialROCR, "tpr", "fpr")
+
+plot(predROCR,colorize = T) #Plot ROC curve
+
+performance(trialROCR, "auc")@y.values #Ans 4.2
