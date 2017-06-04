@@ -435,3 +435,181 @@ predROCR <- performance(trialROCR, "tpr", "fpr")
 plot(predROCR,colorize = T) #Plot ROC curve
 
 performance(trialROCR, "auc")@y.values #Ans 4.2
+
+
+#Assignment 3 - SPAM EMAIL
+
+emails <- read.csv("./data/emails.csv", stringsAsFactors = F)
+
+nrow(emails) #Ans 1.1
+
+table(emails$spam) #Ans 1.2
+
+head(emails$text)
+
+max(nchar(emails$text)) #Ans 1.5
+
+which.min(nchar(emails$text)) #Ans 1.6
+
+library(tm)
+
+corpus <- Corpus(VectorSource(emails$text))
+
+## Converting to lowercase
+
+corpus <- tm_map(corpus, content_transformer(tolower))
+
+## Remove punctuation
+
+corpus <- tm_map(corpus, removePunctuation)
+
+## Remove stopwords
+
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+## Stem words
+
+corpus <- tm_map(corpus, stemDocument)
+
+
+dtm <- DocumentTermMatrix(corpus)
+ncol(dtm) #Ans 2.1
+
+spdtm <- removeSparseTerms(dtm, 0.95)
+ncol(spdtm) #Ans 2.2
+
+emailsSparse <- as.data.frame(as.matrix(spdtm))
+
+colnames(emailsSparse) = make.names(colnames(emailsSparse))
+
+which.max(colSums(emailsSparse)) #Ans 2.3
+
+
+emailsSparse$spam <- emails$spam
+
+colnames(emailsSparse)[colSums(subset(emailsSparse, spam == 0)) >= 5000] #Ans 2.4
+
+colnames(emailsSparse)[colSums(subset(emailsSparse, spam == 1)) >= 1000] #Ans 2.5 (Dependent variable spam not counted so 3)
+
+emailsSparse$spam <- as.factor(emailsSparse$spam)
+
+library(caTools)
+set.seed(123)
+split <- sample.split(emailsSparse, SplitRatio = 0.7)
+
+train <- subset(emailsSparse, split == T)
+test <- subset(emailsSparse, split == F)
+
+spamLog <- glm(spam ~. , data = train, family = binomial)
+predLog <- predict(spamLog)
+
+library(rpart)
+library(rpart.plot)
+
+spamCART <- rpart(spam ~. ,data = train, method = "class")
+predCART <- predict(spamCART)
+
+library(randomForest)
+
+set.seed(123)
+spamRF <- randomForest(spam ~. , data = train)
+predRF <- predict(spamRF, type = "prob")
+
+sum(predLog < 0.00001) #Ans 3.1 (3046)
+
+sum(predLog > 0.99999) #(954)
+
+sum((predLog >= 0.00001 & predLog <= 0.99999)) #(10)
+
+summary(spamLog) #Ans 3.2 (0)
+
+prp(spamCART) #Ans 3.3
+
+table(train$spam, predLog >= 0.5)
+(2978 + 917)/nrow(train) #Ans 3.4 (0.9990025)
+
+
+performance(prediction(predLog, train$spam), "auc")@y.values #Ans 3.5 (0.9999959)
+
+predtrainCART <- predict(spamCART)
+
+table(train$spam, predtrainCART[,2] >= 0.5)
+
+(2900 + 894)/nrow(train) #Ans 3.6 (0.942394)
+
+performance(prediction(predtrainCART[,2], train$spam), "auc")@y.values #Ans 3.7 (0.9696044)
+
+
+predtrainRF <- predict(spamRF, type = "prob")
+
+table(train$spam, predtrainRF[,2] >= 0.5)
+
+(3001 + 916)/nrow(train) #Ans 3.8 (0.9793017)
+
+performance(prediction(predtrainRF[,2], train$spam), "auc")@y.values #Ans 3.9 (0.9979116)
+
+predtestLog <- predict(spamLog, newdata = test)
+
+table(test$spam, predtestLog >= 0.5)
+
+(1245 + 376)/nrow(test) #Ans 4.1 (0.9505239)
+
+performance(prediction(predtestLog, test$spam), "auc")@y.values #Ans 4.2 (0.9627517)
+
+## CART model testing accuracy
+
+predtestCART <- predict(spamCART, newdata = test)
+
+table(test$spam, predtestCART[,2] >= 0.5)
+(1243 + 383)/nrow(test) #Ans 4.3 (0.9394645)
+
+performance(prediction(predtestCART[,2], test$spam), "auc")@y.values #Ans 4.4 (0.963176)
+
+predtestRF <- predict(spamRF, newdata = test, type = "prob")
+
+table(test$spam, predtestRF[,2] >= 0.5)
+(1302 + 394)/nrow(test) #Ans 4.5 (0.975553)
+
+performance(prediction(predtestRF[,2], test$spam), "auc")@y.values #Ans 4.6 (0.9975656)
+
+#ASSIGNMENT 2 - SPAM emails (Continued)
+
+wordCount = rowSums(as.matrix(dtm))
+
+hist(wordCount) #Ans 6.2
+
+hist(log(wordCount)) #Ans 6.3
+
+emailsSparse$logWordCount <- log(wordCount)
+
+boxplot(emailsSparse$logWordCount~emailsSparse$spam) #Ans 6.4
+
+## Splitting data
+
+library(caTools)
+set.seed(123)
+split <- sample.split(emailsSparse, SplitRatio = 0.7)
+
+train2 <- subset(emailsSparse, split == T)
+test2 <- subset(emailsSparse, split == F)
+
+spam2CART <- rpart(spam ~., data = train2, method = "class")
+prp(spam2CART) #Ans 6.5
+
+set.seed(123)
+spam2RF <- randomForest(spam ~., data = train2)
+
+predtestCART2 <- predict(spam2CART, newdata = test2)
+predtestRF2 <- predict(spam2RF, newdata = test2, type = "prob")
+
+table(test2$spam, predtestCART2[,2] >= 0.5)
+(1217 + 392)/nrow(test2) #Ans 6.6 (0.9301513)
+
+performance(prediction(predtestCART2[,2], test2$spam), "auc")@y.values #Ans 6.7 (0.9582438)
+
+table(test2$spam, predtestRF2[,2] >= 0.5)
+(1298 + 388)/nrow(test2) #Ans 6.8 (0.9772992)
+
+performance(prediction(predtestRF2[,2], test2$spam), "auc")@y.values #Ans 6.9 (0.9980905)
+
+### Can learn more about n-grams
