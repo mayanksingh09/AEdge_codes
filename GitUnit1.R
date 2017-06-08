@@ -1,21 +1,13 @@
 Sys.setlocale("LC_ALL", "C")
 
 summary(mtcars)
-
-setwd("/home/fractaluser/Documents/edX/Analytics Edge")
-
 WHO <- read.csv("./data/WHO.csv")
 WHO_Europe <- subset(WHO, Region == "Europe")
-
 plot(WHO$GNI, WHO$FertilityRate)
-
 outlier <- subset(WHO, GNI > 10000 & FertilityRate > 2.5)
 nrow(outlier)
-
 outlier[c("Country", "GNI", "FertilityRate")]
-
 WHO$Country[which.min(WHO$Over60)]
-
 WHO$Country[which.max(WHO$LiteracyRate)]
 
 
@@ -37,8 +29,6 @@ tapply(WHO$ChildMortality, WHO$Region, mean)
 
 
 #USDA Data
-##setwd("C:/Users/Mayank/Desktop/R_Programming/edX/Analytics Edge")
-setwd("/home/fractaluser/Documents/edX/Analytics Edge")
 
 USDA <- read.csv("./data/USDA.csv")
 
@@ -92,25 +82,26 @@ max(mvt$ID)
 
 min(mvt$Beat)
 
-sum(mvt$Arrest)
+sum(mvt$Arrest) #Ans 1.5
 
-match("ALLEY", mvt$LocationDescription)
+table(mvt$LocationDescription) #Ans 1.6
 
 summary(mvt)
 
 DateConvert = as.Date(strptime(mvt$Date, "%m/%d/%y %H:%M"))
 
-summary(DateConvert)
+summary(DateConvert) #Ans 2.2
 
 mvt$Month = months(DateConvert)
 mvt$Weekday = weekdays(DateConvert)
 mvt$Date = DateConvert
 
+which.min(table(mvt$Month)) #Ans 2.3
+
+which.max(table(mvt$Weekday)) #Ans 2.4
+
 table(mvt$Month)
-
-table(mvt$Weekday)
-
-table(mvt$Month, mvt$Arrest)
+table(mvt$Month, mvt$Arrest) #Ans 2.5 (Jan)
 
 hist(mvt$Date, breaks=100)
 
@@ -118,6 +109,11 @@ boxplot(mvt$Date ~ mvt$Arrest)
 
 table(mvt$Year, mvt$Arrest)
 
+2152/(2152+18517) #Ans 3.3
+
+1212/(1212 + 13068) #Ans 3.4
+
+550/(550 + 13542)
 table(mvt$Year)
 
 sort(table(mvt$LocationDescription))
@@ -148,8 +144,12 @@ CocaCola$Date = as.Date(CocaCola$Date, "%m/%d/%y")
 ProcterGamble$Date = as.Date(ProcterGamble$Date, "%m/%d/%y")
 Boeing$Date = as.Date(Boeing$Date, "%m/%d/%y")
 
+str(IBM) #Ans 1.1
+summary(IBM$StockPrice) #Ans 1.4
+summary(GE$StockPrice) #Ans 1.5
+summary(CocaCola$StockPrice) #Ans 1.6
 summary(Boeing)
-
+sd(ProcterGamble$StockPrice) #Ans 1.8
 
 plot(CocaCola$Date, CocaCola$StockPrice, type = "l")
 lines(ProcterGamble$Date, ProcterGamble$StockPrice)
@@ -183,16 +183,21 @@ lines(ProcterGamble$Date[301:432], ProcterGamble$StockPrice[301:432], col="blue"
 lines(IBM$Date[301:432], IBM$StockPrice[301:432], col="green")
 lines(GE$Date[301:432], GE$StockPrice[301:432], col="purple")
 lines(Boeing$Date[301:432], Boeing$StockPrice[301:432], col="black")
-tapply(IBM$StockPrice,months(IBM$Date), mean, na.rm = T)
+abline(v=as.Date(c("1997-09-01")), lwd=2)
+abline(v=as.Date(c("1997-12-01")), lwd=2)
+
+sort(tapply(IBM$StockPrice,months(IBM$Date), mean, na.rm = T)) #Ans 4.1
 
 mean(IBM$StockPrice)
 
-tapply(Boeing$StockPrice,months(Boeing$Date), mean, na.rm = T)
-tapply(GE$StockPrice,months(GE$Date), mean, na.rm = T)
+sort(tapply(Boeing$StockPrice,months(Boeing$Date), mean, na.rm = T))
+
+sort(tapply(GE$StockPrice,months(GE$Date), mean, na.rm = T))
+sort(tapply(CocaCola$StockPrice,months(CocaCola$Date), mean, na.rm = T))
 
 
 #Assignment 3
-setwd("/home/fractaluser/Documents/edX/Analytics Edge")
+
 CPS <- read.csv("./data/CPSData.csv")
 
 summary(CPS)
@@ -200,23 +205,29 @@ str(CPS)
 
 nrow(CPS) #Ans 1.1
 
-#Educational and health services Ans 1.2
+sort(table(CPS$Industry)) #Ans 1.2
 
 sort(table(CPS$State)) #Ans 1.3
 
-(116639 + 7073)/(116639 + 7073 + 7590) #Atable(CPS$Region, is.na(CPS$MetroAreaCode))[,2]ns 1.4
+table(CPS$Citizenship) #Ans 1.4
+(116639 + 7073)/(116639 + 7073 + 7590) 
+
+#table(CPS$Region, is.na(CPS$MetroAreaCode))[,2]
 
 table(CPS$Race, CPS$Hispanic) #Ans 1.5
 
-table(CPS$Citizenship, is.na(CPS$Married)) #Ans 2.2
+summary(CPS) #Ans 2.1
+
+table(CPS$Age, is.na(CPS$Married)) #Ans 2.2
 
 table(CPS$State, is.na(CPS$MetroAreaCode)) #Ans 2.3
 
 table(CPS$Region, is.na(CPS$MetroAreaCode)) #Ans 2.4
+
 10674/(20010+10674)
 8084/(25093+8084)
 
-round(tapply(is.na(CPS$MetroAreaCode), CPS$State, mean, na.rm = T),2) #Ans 2.5
+sort(round(tapply(is.na(CPS$MetroAreaCode), CPS$State, mean, na.rm = T),2)) #Ans 2.5
 
 sort(tapply(is.na(CPS$MetroAreaCode), CPS$State, mean, na.rm = T)) #Ans 2.6
 
@@ -227,6 +238,10 @@ nrow(MetroAreaMap)
 nrow(CountryMap)
 
 CPS = merge(CPS, MetroAreaMap, by.x="MetroAreaCode", by.y="Code", all.x=TRUE) #merge the datasets to map the values
+
+summary(CPS)
+
+sort(table(CPS$MetroArea)) #Ans 3.3
 
 sort(tapply((CPS$Hispanic == 1), CPS$MetroArea, mean, na.rm = T)) #Ans 3.4
 
@@ -241,7 +256,15 @@ CPS$CountryOfBirthCode
 
 CPS = merge(CPS, CountryMap, by.x="CountryOfBirthCode", by.y="Code", all.x=TRUE) #merge the datasets to map the values
 
+summary(CPS) #Ans 4.1
+
+sort(table(CPS$Country)) #Ans 4.2
+
 table((CPS$Country != "United States"), (CPS$MetroArea == "New York-Northern New Jersey-Long Island, NY-NJ-PA")) #Ans 4.3
 1668/(1668+3736)
 
 sort(table(CPS$MetroArea, (CPS$Country == "India"))[,2]) #Ans 4.4
+
+sort(table(CPS$MetroArea, (CPS$Country == "Brazil"))[,2])
+
+sort(table(CPS$MetroArea, (CPS$Country == "Somalia"))[,2])
