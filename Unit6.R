@@ -66,3 +66,4 @@ clusterGroups2 <- cutree(clusterMovies, k = 2) #10 clusters
 plot(clusterGroups2)
 
 table(clusterGroups2, movies$Drama)
+
