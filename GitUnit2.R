@@ -14,8 +14,6 @@
 #Multiple Linear Regression
 ## Uses more than one independent variable to predict the dependent variable
 
-setwd("/home/fractaluser/Documents/edX/Analytics Edge")
-
 wine <- read.csv("./data/wine.csv")
 str(wine)
 summary(wine)
@@ -148,6 +146,7 @@ wins2012 = c(94, 88, 95, 88, 93, 94, 98, 97, 93, 94)
 wins2013 = c(97, 97, 92, 93, 92, 96, 94, 96, 92, 90)
 
 cor(teamRank, wins2012)
+cor(teamRank, wins2013)
 
 ## NBA Data
 
@@ -230,8 +229,6 @@ R2 <- 1 - SSE/SST
 
 ## READING TEST SCORE
 
-setwd("/home/fractaluser/Documents/edX/Analytics Edge")
-
 pisaTrain <- read.csv("./data/pisa2009train.csv")
 pisaTest <- read.csv("./data/pisa2009test.csv")
 
@@ -262,7 +259,7 @@ lmScore <- lm(readingScore~., data = pisaTrain)
 
 summary(lmScore) #Ans 3.1
 
-sqrt(sum(lmScore$residuals^2)/(nrow(pisaTrain)-1)) 
+sqrt(sum(lmScore$residuals^2)/(nrow(pisaTrain)-1)) #Ans 3.2
 
 
 predTest <- predict(lmScore, newdata = pisaTest)
