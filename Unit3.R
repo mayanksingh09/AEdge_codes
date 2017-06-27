@@ -313,11 +313,14 @@ train = subset(parole, split == TRUE)
 test = subset(parole, split == FALSE)
 
 
-parolemod1 <- glm(violator~., data = parole, family = binomial)
+parolemod1 <- glm(violator~., data = train, family = binomial)
 
 summary(parolemod1)
 exp(1.61) #Ans 4.2
 
+q4.3 <- exp(-4.24 + (0.8867192) + (50*-0.0001756) + (-0.1238867*3) + (0.0802954*12) + (0.6837143))
+
+q4.3/(1+q4.3)
 e <- exp(-4.05 + 0.27 + 0.75 + (0.00655*50) - (0.076*3) + (0.053*12) + (0.33*1))
 
 e/(e+1)
@@ -329,7 +332,7 @@ max(predictTest)
 table(test$violator, predictTest > 0.5)
 12/(12+11)
 
-169/(169+10)
+167/(167+12)
 
 (169+12)/(169+10+11+12)
 
@@ -361,6 +364,7 @@ loans[vars.for.imputation] = imputed
 
 ##Using the imputed dataset instead
 loans <- loans_imputed
+loans$purpose <- as.factor(loans$purpose)
 
 library(caTools)
 set.seed(144)
@@ -391,9 +395,11 @@ auc = as.numeric(performance(ROCRpredTest, "auc")@y.values) #Ans 2.4
 loansmod2 <- glm(not.fully.paid ~ int.rate, family = binomial, data = train)
 summary(loansmod2)
 
-predicted.risk2 <- predict(loansmod2, type = "respons", newdata = test)
+predicted.risk2 <- predict(loansmod2, type = "response", newdata = test)
 
 max(predicted.risk2) #Ans 3.2
+
+table(test$not.fully.paid, predicted.risk2 > 0.5) #Ans 3.3 = 0
 
 ROCRpredTest2 <- prediction(predicted.risk2, test$not.fully.paid)
 auc <- as.numeric(performance(ROCRpredTest2, "auc")@y.values)
@@ -429,7 +435,7 @@ nrow(baseball) #Ans 1.1
 nrow(table(baseball$Year)) #Ans 1.2
 
 baseball <- subset(baseball, Playoffs == 1)
-nrow(playoff)
+nrow(baseball)
 
 table(baseball$Year) #Ans 1.4
 
