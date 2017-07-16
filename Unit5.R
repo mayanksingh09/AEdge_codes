@@ -303,6 +303,8 @@ wikiWords2$NumWordsRemoved = rowSums(as.matrix(dtmRemoved))
 mean(wikiWords2$NumWordsAdded) #Ans 2.3
 
 set.seed(123)
+spl <- sample.split(wikiWords$Vandal, SplitRatio = 0.7)
+
 wikiTrain3 = subset(wikiWords2, spl==TRUE)
 wikiTest3 = subset(wikiWords2, spl==FALSE)
 
@@ -424,7 +426,7 @@ table(test$trials, trialpred[,2] >= 0.5)
 
 library(ROCR)
 
-predROCR <- prediction(pred[,2], test$responsive)
+predROCR <- prediction(trialpred[,2], test$responsive)
 perfROCR <- performance(predROCR, "tpr", "fpr")
 
 
