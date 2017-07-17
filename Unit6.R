@@ -142,8 +142,116 @@ image(healthyClusters, axes = F, col = rainbow(k))
 tumor <- read.csv("./data/tumor.csv", header = F)
 
 tumorMatrix <- as.matrix(tumor)
-tumorVector <- as.matrix(tumorMatrix)
+tumorVector <- as.vector(tumorMatrix)
 
 ## Apply the clusters created on healthy image and apply on tumor vector, healthy vector training set, tumor vector testing set
+library(flexclust) # kcca class object present (k-centroids cluster analysis)
 
+KMC.kcca <- as.kcca(KMC, healthyVector)
+tumorClusters <- predict(KMC.kcca, newdata = tumorVector)
+
+dim(tumorClusters) <- c(nrow(tumorMatrix), ncol(tumorMatrix))
+
+image(tumorClusters, axes = F, col = rainbow(k))
+
+## Packages specialized for medical image analysis: http://cran.r-project.org/web/views/MedicalImaging.html
+
+
+# Assignment 1 - Daily Kos
+
+dailykos <- read.csv("./data/dailykos.csv")
+str(dailykos)
+
+distances <- dist(dailykos, method = "euclidean")
+clusterWords <- hclust(distances, method = "ward.D")
+
+plot(clusterWords)
+
+clusterGroups <- cutree(clusterWords, k = 7) #7 clusters
+subset(dailykos, clusterGroups)
+table(clusterGroups) #Ans 1.4
+
+HierCluster1 <- subset(dailykos, clusterGroups == 1)
+HierCluster2 <- subset(dailykos, clusterGroups == 2)
+HierCluster3 <- subset(dailykos, clusterGroups == 3)
+HierCluster4 <- subset(dailykos, clusterGroups == 4)
+HierCluster5 <- subset(dailykos, clusterGroups == 5)
+HierCluster6 <- subset(dailykos, clusterGroups == 6)
+HierCluster7 <- subset(dailykos, clusterGroups == 7)
+
+tail(sort(colMeans(HierCluster1))) #Ans 1.5
+tail(sort(colMeans(HierCluster2))) #Ans 1.6
+tail(sort(colMeans(HierCluster3)))
+tail(sort(colMeans(HierCluster4)))
+tail(sort(colMeans(HierCluster5)))
+tail(sort(colMeans(HierCluster6)))
+tail(sort(colMeans(HierCluster7)))
+
+set.seed(1000)
+KMCWords <- kmeans(dailykos, centers = 7)
+str(KMC)
+
+wordsClusters <- KMCWords$cluster
+table(wordsClusters)
+
+KMeansCluster1 <- subset(dailykos, wordsClusters == 1)
+KMeansCluster2 <- subset(dailykos, wordsClusters == 2)
+KMeansCluster3 <- subset(dailykos, wordsClusters == 3)
+KMeansCluster4 <- subset(dailykos, wordsClusters == 4)
+KMeansCluster5 <- subset(dailykos, wordsClusters == 5)
+KMeansCluster6 <- subset(dailykos, wordsClusters == 6)
+KMeansCluster7 <- subset(dailykos, wordsClusters == 7)
+
+tail(sort(colMeans(KMeansCluster1)), 6)
+tail(sort(colMeans(KMeansCluster2)), 6)
+tail(sort(colMeans(KMeansCluster3)), 6)
+tail(sort(colMeans(KMeansCluster4)), 6)
+tail(sort(colMeans(KMeansCluster5)), 6)
+tail(sort(colMeans(KMeansCluster6)), 6)
+tail(sort(colMeans(KMeansCluster7)), 6)
+
+table(wordsClusters)
+table(wordsClusters, clusterGroups)
+
+
+# Assignment 2 - Airlines
+
+airlines <- read.csv("./data/AirlinesCluster.csv")
+
+summary(airlines)
+library(caret)
+
+## Normalizing dataset
+preproc = preProcess(airlines)
+airlinesNorm = predict(preproc, airlines)
+
+summary(airlinesNorm)
+
+airlinedist <- dist(airlinesNorm, method = "euclidean")
+clusterairlines <- hclust(airlinedist, method = "ward.D")
+
+plot(clusterairlines)
+
+airlineclusters <- cutree(clusterairlines, k = 5) #5 clusters
+
+table(airlineclusters)
+
+tapply(airlines$Balance, airlineclusters, mean)
+tapply(airlines$QualMiles, airlineclusters, mean)
+tapply(airlines$BonusMiles, airlineclusters, mean)
+tapply(airlines$BonusTrans, airlineclusters, mean)
+tapply(airlines$FlightMiles, airlineclusters, mean)
+tapply(airlines$FlightTrans, airlineclusters, mean)
+tapply(airlines$DaysSinceEnroll, airlineclusters, mean)
+
+set.seed(88)
+KMCairlines <- kmeans(airlinesNorm, centers = 5, iter.max = 1000)
+
+table(KMCairlines$cluster)
+
+tapply(airlines$Balance, KMCairlines$cluster, mean)
+tapply(airlines$QualMiles, KMCairlines$cluster, mean)
+
+
+# Assignment 3 - Stock Returns
 
