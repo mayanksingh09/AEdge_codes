@@ -102,3 +102,103 @@ ggplot(DayHourCounts, aes(x = Hour, y = Var1)) + geom_tile(aes(fill = Freq)) + s
 
 ## MAP PLOTS
 
+library(ggmap)
+library(maps)
+
+chicago <- get_map(location = "chicago", zoom = 11)
+
+ggmap(chicago) #Geographical map of chicago
+
+ggmap(chicago) + geom_point(data = mvt[1:100,], aes(x = Longitude, y = Latitude))
+
+### Crime counts dataframe
+
+LatLonCounts <- as.data.frame(table(round(mvt$Longitude,2), round(mvt$Latitude, 2)))
+
+str(LatLonCounts)
+
+LatLonCounts$Long <- as.numeric(as.character(LatLonCounts$Var1))
+
+LatLonCounts$Lat <- as.numeric(as.character(LatLonCounts$Var2))
+
+ggmap(chicago) + geom_point(data = LatLonCounts, aes(x = Long, y = Lat, color = Freq, size = Freq)) + scale_color_gradient(low = "yellow", high = "red")
+
+### using geom_time for heatmap
+
+ggmap(chicago) + geom_tile(data = LatLonCounts, aes(x = Long, y = Lat, alpha = Freq), fill = "red")
+
+
+## Quick Question
+
+LatLonCounts2 <- subset(LatLonCounts, LatLonCounts$Freq > 0)
+
+str(LatLonCounts2)
+
+ggmap(chicago) + geom_point(data = LatLonCounts2, aes(x = Long, y = Lat, color = Freq, size = Freq)) + scale_color_gradient(low = "yellow", high = "red")
+
+
+## Heatmap on USA
+
+murders <- read.csv("./data/murders.csv")
+str(murders)
+
+### Map of USA
+
+statesMap <- map_data("state")
+str(statesMap)
+
+
+### Plot the map
+
+ggplot(statesMap, aes(x = long, y = lat, group = group)) + geom_polygon(fill = "white", color = "black")
+
+murders$region <- tolower(murders$State)
+
+### joining the two data frames
+
+murderMap <- merge(statesMap, murders, by = "region")
+
+str(murderMap)
+
+### Plotting the murders 
+
+ggplot(murderMap, aes(x = long, y = lat, group = group, fill = Murders)) + geom_polygon(color = "black") + scale_fill_gradient(low = "black", high = "red", guide = "legend")
+
+
+### Population check
+ggplot(murderMap, aes(x = long, y = lat, group = group, fill = Population)) + geom_polygon(color = "black") + scale_fill_gradient(low = "black", high = "red", guide = "legend")
+
+
+### Plotting murder rate
+
+murderMap$MurderRate <- (murderMap$Murders/murderMap$Population*100000)
+
+ggplot(murderMap, aes(x = long, y = lat, group = group, fill = MurderRate)) + geom_polygon(color = "black") + scale_fill_gradient(low = "black", high = "red", guide = "legend", limits = c(0,10)) # Limiting the values to 10
+
+
+## Quick Question
+
+### Map of Gunowners
+
+ggplot(murderMap, aes(x = long, y = lat, group = group, fill = GunOwnership)) + geom_polygon(color = "black") + scale_fill_gradient(low = "black", high = "red", guide = "legend")
+
+
+# Recitation 7
+
+library(ggplot2)
+intl <- read.csv("./data/intl.csv")
+
+
+### Bar plot
+ggplot(intl, aes(x = Region, y = PercentOfIntl)) + geom_bar(stat = "identity") + geom_text(aes(label = PercentOfIntl)) #stat identity uses value of y variable as is
+
+### transform the data frame
+
+intl <- transform(intl, Region = reorder(Region, -PercentOfIntl))
+intl$PercentOfIntl <- intl$PercentOfIntl*100
+
+ggplot(intl, aes(x = Region, y = PercentOfIntl)) + 
+    geom_bar(stat = "identity", fill = "dark blue") + 
+    geom_text(aes(label = PercentOfIntl), vjust = -0.4) + 
+    ylab("Percent of International Students") +
+    theme(axis.title = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))
