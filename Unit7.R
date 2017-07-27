@@ -202,3 +202,60 @@ ggplot(intl, aes(x = Region, y = PercentOfIntl)) +
     geom_text(aes(label = PercentOfIntl), vjust = -0.4) + 
     ylab("Percent of International Students") +
     theme(axis.title = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))
+
+## Map with MIT data
+library(ggmap)
+intlall <- read.csv("./data/intlall.csv", stringsAsFactors = F)
+head(intlall)
+
+intlall[is.na(intlall)] = 0
+
+world_map <- map_data("world")
+str(world_map)
+
+world_map <- merge(world_map, intlall, by.x = "region", by.y = "Citizenship")
+str(world_map)
+
+ggplot(world_map, aes(x = long, y = lat, group = group)) + geom_polygon(fill = "white", color = "black") + coord_map("mercator") #data reordered
+
+world_map <- world_map[order(world_map$group, world_map$order),]
+
+unique(intlall$Citizenship)
+intlall$Citizenship[intlall$Citizenship == "China (People's Republic Of)"] <- "China"
+
+### Merge again
+world_map <- merge(world_map, intlall, by.x = "region", by.y = "Citizenship")
+str(world_map)
+
+world_map <- world_map[order(world_map$group, world_map$order),]
+world_map$Total.x
+
+ggplot(world_map, aes(x = long, y = lat, group = group)) + geom_polygon(aes(fill = Total.x), color = "black") + coord_map("mercator") #data reordered
+
+
+ggplot(world_map, aes(x = long, y = lat, group = group)) + geom_polygon(aes(fill = Total.x), color = "black") + coord_map("ortho", orientation = c(-37,175,0)) 
+
+
+## Household data
+
+households <- read.csv("./data/households.csv")
+
+str(households)
+
+# Year group fraction
+
+library(reshape2)
+
+households[,1:3]
+
+### Changing wide data to long data
+melt(households, id = "Year")
+
+
+ggplot(melt(households, id = "Year"), aes(x = Year, y = value, color = variable)) + geom_line(size = 2) + geom_point(size = 5) + ylab("Percentage of Households")
+
+
+### Assignment 1 - Election Forecast
+
+library(ggmap)
+library(ggplot2)
