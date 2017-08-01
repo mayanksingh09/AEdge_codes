@@ -256,6 +256,121 @@ ggplot(melt(households, id = "Year"), aes(x = Year, y = value, color = variable)
 
 
 ### Assignment 1 - Election Forecast
-
+library(maps)
 library(ggmap)
 library(ggplot2)
+
+statesMap = map_data("state")
+
+unique(statesMap$group) #Ans 1.1
+
+ggplot(statesMap, aes(x = long, y = lat, group = group)) + geom_polygon(fill = "white", color = "black")
+
+polling <- read.csv("./data/PollingImputed.csv")
+
+Train <- subset(polling, polling$Year <= 2008)
+Test <- subset(polling, polling$Year == 2012)
+
+mod2 = glm(Republican~SurveyUSA+DiffCount, data=Train, family="binomial")
+
+TestPrediction = predict(mod2, newdata=Test, type="response")
+TestPredictionBinary = as.numeric(TestPrediction > 0.5)
+predictionDataFrame = data.frame(TestPrediction, TestPredictionBinary, Test$State)
+
+table(predictionDataFrame$TestPredictionBinary)
+
+mean(predictionDataFrame$TestPrediction)
+
+predictionDataFrame$region = tolower(predictionDataFrame$Test.State)
+
+predictionMap = merge(statesMap, predictionDataFrame, by = "region")
+
+predictionMap = predictionMap[order(predictionMap$order),]
+nrow(predictionMap)
+
+nrow(statesMap)
+
+ggplot(predictionMap, aes(x = long, y = lat, group = group, fill = TestPredictionBinary)) + geom_polygon(color = "black")
+
+ggplot(predictionMap, aes(x = long, y = lat, group = group, fill = TestPredictionBinary))+ geom_polygon(color = "black") + scale_fill_gradient(low = "blue", high = "red", guide = "legend", breaks= c(0,1), labels = c("Democrat", "Republican"), name = "Prediction 2012")
+
+predictionDataFrame[predictionDataFrame$region =="florida",]
+
+
+### Assignment 2 - Visualizing Network data
+
+users <- read.csv("./data/users.csv")
+edges <- read.csv("./data/edges.csv")
+
+str(users)
+
+table(users$locale, users$school)
+table(users$gender, users$school)
+
+library(igraph)
+
+?graph.data.frame
+
+g = graph.data.frame(edges, FALSE, users)
+plot(g, vertex.size=5, vertex.label=NA)
+
+4
+7
+
+sum(degree(g) >= 10)
+
+V(g)$size = degree(g)/2+2
+plot(g, vertex.label=NA)
+
+V(g)$color = "black"
+V(g)$color[V(g)$gender == "A"] = "red"
+V(g)$color[V(g)$gender == "B"] = "gray"
+plot(g, vertex.label=NA)
+
+
+V(g)$color = "black"
+V(g)$color[V(g)$locale == "A"] = "red"
+V(g)$color[V(g)$locale == "B"] = "gray"
+plot(g, vertex.label=NA)
+
+library(rgl)
+rglplot(g, vertex.label=NA)
+
+plot(g, edge.width=2, vertex.label=NA)
+
+
+### Assignment 3 - WordClouds
+library(tm)
+library(SnowballC)
+tweets <- read.csv("./data/tweets.csv", stringsAsFactors = F)
+
+corpus = VCorpus(VectorSource(tweets$Tweet))
+corpus = tm_map(corpus, content_transformer(tolower))
+corpus = tm_map(corpus, removePunctuation)
+corpus = tm_map(corpus, removeWords, stopwords("english"))
+frequencies = DocumentTermMatrix(corpus)
+allTweets = as.data.frame(as.matrix(frequencies))
+ncol(allTweets)
+
+library(wordcloud)
+colSums(allTweets)
+
+wordcloud(colnames(allTweets), colSums(allTweets))
+wordcloud(colnames(allTweets), colSums(allTweets), scale=c(2, .25))
+
+corpus = Corpus(VectorSource(tweets$Tweet))
+corpus = tm_map(corpus, tolower)
+corpus = tm_map(corpus, removePunctuation)
+corpus = tm_map(corpus, removeWords, c("apple", stopwords("english")))
+frequencies = DocumentTermMatrix(corpus)
+allTweets = as.data.frame(as.matrix(frequencies))
+wordcloud(colnames(allTweets), colSums(allTweets))
+wordcloud(colnames(allTweets), colSums(allTweets), scale=c(2, 0.25))
+
+negativeTweets = subset(allTweets, tweets$Avg <= -1)
+wordcloud(colnames(negativeTweets), colSums(negativeTweets))
+
+
+library(RColorBrewer)
+brewer.pal(9, "Blues")[-1:-4]
+brewer.pal(9, "Blues")[5:9]
