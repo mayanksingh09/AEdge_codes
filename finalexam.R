@@ -153,3 +153,62 @@ prp(treemodel)
 pred <- predict(treemodel, newdata = testing, type = "class")
 table(testing$y, pred)
 (1293 + 37)/nrow(testing)
+
+
+## GROCERY SHOPPING BEHAVIOUR ##
+
+orders <- read.csv("./data/orders.csv")
+
+sort(table(orders$order_hour_of_day))
+
+mean(orders$days_since_prior_order)
+
+cor(orders$fresh.fruits, orders$fresh.vegetables)
+
+table(orders$frozen.pizza)
+(211+44+4+1+1)/nrow(orders)
+
+orders.aisle = orders[, 5:ncol(orders)]
+
+
+library(caret)
+
+#### Normalizing data
+preproc = preProcess(orders.aisle)
+ordersNorm = predict(preproc, orders.aisle)
+
+max(ordersNorm$frozen.dessert)
+
+min(ordersNorm$soft.drinks)
+
+
+#### Creating dendrogram
+distances <- dist(ordersNorm, method = "euclidean")
+ClusterProducts <- hclust(distances, method = "ward.D")
+plot(ClusterProducts, labels = FALSE)
+
+
+#### K-means clustering
+
+set.seed(200)
+
+km <- kmeans(ordersNorm, centers = 4)
+
+table(km$cluster)
+
+clusters <- km$cluster
+
+tapply(orders$cleaning.products, clusters, mean)
+tapply(orders$beauty, clusters, mean)
+tapply(orders$kitchen.supplies, clusters, mean)
+
+tapply(orders$frozen.dessert, clusters, mean)
+
+tapply(orders$order_id, clusters, n)
+table(clusters)
+
+rowSums(km$centers)
+
+sort(tapply(orders$order_hour_of_day, clusters, mean))
+
+tapply(orders$days_since_prior_order, clusters, mean)
